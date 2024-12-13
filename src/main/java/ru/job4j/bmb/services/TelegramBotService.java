@@ -16,10 +16,6 @@ public class TelegramBotService implements BeanNameAware {
         this.handler = handler;
     }
 
-    public void receive(Content content) {
-        handler.receive(content);
-    }
-
     @PostConstruct
     public void init() {
         System.out.println("Bean 'TelegramBotService' is going through init.");
