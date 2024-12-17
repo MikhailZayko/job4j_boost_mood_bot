@@ -2,27 +2,46 @@ package ru.job4j.bmb.services;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import ru.job4j.bmb.component.TgUI;
 import ru.job4j.bmb.content.Content;
-import ru.job4j.bmb.repository.UserRepository;
+import ru.job4j.bmb.model.User;
+import ru.job4j.bmb.repository.MoodLogRepository;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Service
 public class RemindService {
 
-    private final TelegramBotService telegramBotService;
+    private final SentContent sentContent;
 
-    private final UserRepository userRepository;
+    private final MoodLogRepository moodLogRepository;
 
-    public RemindService(TelegramBotService telegramBotService, UserRepository userRepository) {
-        this.telegramBotService = telegramBotService;
-        this.userRepository = userRepository;
+    private final TgUI tgUI;
+
+    public RemindService(SentContent sentContent,
+                           MoodLogRepository moodLogRepository, TgUI tgUI) {
+        this.sentContent = sentContent;
+        this.moodLogRepository = moodLogRepository;
+        this.tgUI = tgUI;
     }
 
-    @Scheduled(fixedRateString = "${remind.period}")
-    public void ping() {
-        userRepository.findAll().forEach(user -> {
+    @Scheduled(fixedRateString = "${recommendation.alert.period}")
+    public void remindUsers() {
+        long startOfDay = LocalDate.now()
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+        long endOfDay = LocalDate.now()
+                .plusDays(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli() - 1;
+        for (User user : moodLogRepository.findUsersWhoDidNotVoteToday(startOfDay, endOfDay)) {
             Content content = new Content(user.getChatId());
-            content.setText("Ping");
-            telegramBotService.sent(content);
-        });
+            content.setText("Как настроение?");
+            content.setMarkup(tgUI.buildButtons());
+            sentContent.sent(content);
+        }
     }
 }
