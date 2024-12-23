@@ -21,6 +21,16 @@ public class Achievement {
     @JoinColumn(name = "award_id")
     private Award award;
 
+    public Achievement(long createAt, User user, Award award) {
+        this.createAt = createAt;
+        this.user = user;
+        this.award = award;
+    }
+
+    public Achievement() {
+
+    }
+
     public Long getId() {
         return id;
     }

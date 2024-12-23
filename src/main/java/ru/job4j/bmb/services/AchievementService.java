@@ -1,26 +1,58 @@
 package ru.job4j.bmb.services;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.lang.NonNull;
+import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.job4j.bmb.content.Content;
+import ru.job4j.bmb.events.UserEvent;
+import ru.job4j.bmb.model.Achievement;
+import ru.job4j.bmb.model.Award;
+import ru.job4j.bmb.model.User;
+import ru.job4j.bmb.repository.AchievementRepository;
+import ru.job4j.bmb.repository.AwardRepository;
+import ru.job4j.bmb.repository.MoodLogRepository;
+
+import java.time.Instant;
+import java.util.Optional;
 
 @Service
-public class AchievementService implements BeanNameAware {
+public class AchievementService implements ApplicationListener<UserEvent> {
 
-    @PostConstruct
-    public void init() {
-        System.out.println("Bean 'AchievementService' is going through init.");
+    private final MoodLogRepository moodLogRepository;
+
+    private final AwardRepository awardRepository;
+
+    private final AchievementRepository achievementRepository;
+
+    private final SentContent sentContent;
+
+    public AchievementService(MoodLogRepository moodLogRepository,
+                              AwardRepository awardRepository,
+                              AchievementRepository achievementRepository,
+                              SentContent sentContent) {
+        this.moodLogRepository = moodLogRepository;
+        this.awardRepository = awardRepository;
+        this.achievementRepository = achievementRepository;
+        this.sentContent = sentContent;
     }
 
-    @PreDestroy
-    public void destroy() {
-        System.out.println("Bean 'AchievementService' will be destroyed now.");
-    }
-
+    @Transactional
     @Override
-    public void setBeanName(@NonNull String name) {
-        System.out.println(name);
+    public void onApplicationEvent(UserEvent event) {
+        User user = event.getUser();
+        long goodMoodDays = moodLogRepository.findAll().stream()
+                .filter(moodLog -> moodLog.getUser().getClientId() == user.getClientId()
+                        && moodLog.getMood().isGood())
+                .count();
+        Optional<Award> optionalAward = awardRepository.findAll().stream()
+                .filter(award -> award.getDays() == goodMoodDays)
+                .findFirst();
+        optionalAward.ifPresent(award -> {
+            achievementRepository.save(new Achievement(Instant.now().getEpochSecond(), user, award));
+            Content content = new Content(user.getChatId());
+            content.setText("Поздравляем с получением достижения: " + award.getTitle() + System.lineSeparator()
+                    + award.getDescription());
+            sentContent.sent(content);
+        });
     }
 }
