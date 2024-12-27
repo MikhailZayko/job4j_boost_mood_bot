@@ -24,6 +24,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AchievementServiceTest {
 
+    private static final long BASE_TIME = Instant.parse("2024-12-20T12:00:00Z").getEpochSecond();
+
+    private static final long SECONDS_IN_DAY = 86400L;
+
     @Mock
     private MoodLogRepository moodLogRepository;
 
@@ -54,9 +58,9 @@ class AchievementServiceTest {
     @Test
     void when3goodThen3daysAward() {
         List<MoodLog> moodLogs = List.of(
-                createMoodLog("Norm", true),
-                createMoodLog("Super", true),
-                createMoodLog("Happy", true)
+                createMoodLog("Norm", true, BASE_TIME),
+                createMoodLog("Super", true, BASE_TIME + SECONDS_IN_DAY),
+                createMoodLog("Happy", true, BASE_TIME + 2 * SECONDS_IN_DAY)
         );
         Award award = getAwards().get(2);
         when(moodLogRepository.findByUserId(user.getClientId())).thenReturn(moodLogs);
@@ -79,11 +83,11 @@ class AchievementServiceTest {
     @Test
     void when2good1bad2goodThen2daysAward() {
         List<MoodLog> moodLogs = List.of(
-                createMoodLog("Norm", true),
-                createMoodLog("Super", true),
-                createMoodLog("Sad", false),
-                createMoodLog("Happy", true),
-                createMoodLog("Ok", true)
+                createMoodLog("Norm", true, BASE_TIME),
+                createMoodLog("Super", true, BASE_TIME + SECONDS_IN_DAY),
+                createMoodLog("Sad", false, BASE_TIME + 2 * SECONDS_IN_DAY),
+                createMoodLog("Happy", true, BASE_TIME + 3 * SECONDS_IN_DAY),
+                createMoodLog("Ok", true, BASE_TIME + 4 * SECONDS_IN_DAY)
         );
         Award award = getAwards().get(1);
         when(moodLogRepository.findByUserId(user.getClientId())).thenReturn(moodLogs);
@@ -106,10 +110,10 @@ class AchievementServiceTest {
     @Test
     void when2good2badThenNoAward() {
         List<MoodLog> moodLogs = List.of(
-                createMoodLog("Norm", true),
-                createMoodLog("Super", true),
-                createMoodLog("Sad", false),
-                createMoodLog("So sad", false)
+                createMoodLog("Norm", true, BASE_TIME),
+                createMoodLog("Super", true, BASE_TIME + SECONDS_IN_DAY),
+                createMoodLog("Sad", false, BASE_TIME + 2 * SECONDS_IN_DAY),
+                createMoodLog("So sad", false, BASE_TIME + 3 * SECONDS_IN_DAY)
         );
         when(moodLogRepository.findByUserId(user.getClientId())).thenReturn(moodLogs);
         when(awardRepository.findAll()).thenReturn(getAwards());
@@ -118,8 +122,8 @@ class AchievementServiceTest {
         verify(sentContent, never()).sent(any(Content.class));
     }
 
-    private MoodLog createMoodLog(String moodName, boolean isGood) {
-        return new MoodLog(user, new Mood(moodName, isGood), Instant.now().getEpochSecond());
+    private MoodLog createMoodLog(String moodName, boolean isGood, long timestamp) {
+        return new MoodLog(user, new Mood(moodName, isGood), timestamp);
     }
 
     private List<Award> getAwards() {
@@ -129,5 +133,4 @@ class AchievementServiceTest {
                 new Award("Молодец", "За 3 дня", 3)
         );
     }
-
 }
