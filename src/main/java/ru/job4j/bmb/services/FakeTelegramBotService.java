@@ -9,22 +9,22 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.job4j.bmb.condition.OnProdCondition;
+import ru.job4j.bmb.condition.OnDevCondition;
 import ru.job4j.bmb.content.Content;
 import ru.job4j.bmb.exceptions.CheckedConsumer;
 import ru.job4j.bmb.exceptions.SentContentException;
 
 @Service
-@Conditional(OnProdCondition.class)
-public class TelegramBotService extends TelegramLongPollingBot implements SentContent {
+@Conditional(OnDevCondition.class)
+public class FakeTelegramBotService extends TelegramLongPollingBot implements SentContent {
 
     private final BotCommandHandler handler;
 
     private final String botName;
 
-    public TelegramBotService(@Value("${telegram.bot.name}") String botName,
-                              @Value("${telegram.bot.token}") String botToken,
-                              BotCommandHandler handler) {
+    public FakeTelegramBotService(@Value("${telegram.bot.name}") String botName,
+                                  @Value("${telegram.bot.token}") String botToken,
+                                  BotCommandHandler handler) {
         super(botToken);
         this.handler = handler;
         this.botName = botName;
@@ -55,7 +55,7 @@ public class TelegramBotService extends TelegramLongPollingBot implements SentCo
                 if (content.getText() != null) {
                     sendAudio.setCaption(content.getText());
                 }
-                execute(sendAudio);
+                System.out.println(sendAudio);
             });
         } else if (content.getPhoto() != null) {
             sendWithExceptionHandling(new SendPhoto(), sendPhoto -> {
@@ -64,7 +64,7 @@ public class TelegramBotService extends TelegramLongPollingBot implements SentCo
                 if (content.getText() != null) {
                     sendPhoto.setCaption(content.getText());
                 }
-                execute(sendPhoto);
+                System.out.println(sendPhoto);
             });
         } else {
             sendWithExceptionHandling(new SendMessage(), sendMessage -> {
@@ -75,7 +75,7 @@ public class TelegramBotService extends TelegramLongPollingBot implements SentCo
                 if (content.getText() != null) {
                     sendMessage.setText(content.getText());
                 }
-                execute(sendMessage);
+                System.out.println(sendMessage);
             });
         }
     }
