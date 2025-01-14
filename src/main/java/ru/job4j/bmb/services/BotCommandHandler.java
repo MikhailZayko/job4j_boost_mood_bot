@@ -17,13 +17,17 @@ public class BotCommandHandler {
 
     private final MoodService moodService;
 
+    private final AdviceService adviceService;
+
     private final TgUI tgUI;
 
     public BotCommandHandler(UserRepository userRepository,
                              MoodService moodService,
+                             AdviceService adviceService,
                              TgUI tgUI) {
         this.userRepository = userRepository;
         this.moodService = moodService;
+        this.adviceService = adviceService;
         this.tgUI = tgUI;
     }
 
@@ -35,6 +39,9 @@ public class BotCommandHandler {
             case "/week_mood_log" -> moodService.weekMoodLogCommand(chatId, clientId);
             case "/month_mood_log" -> moodService.monthMoodLogCommand(chatId, clientId);
             case "/award" -> moodService.awards(chatId, clientId);
+            case "/daily_advice" -> adviceService.offerAdvice(chatId, clientId);
+            case "/enable_advices" -> toggleReminders(chatId, clientId, true);
+            case "/disable_advices" -> toggleReminders(chatId, clientId, false);
             default -> Optional.empty();
         };
     }
@@ -53,6 +60,16 @@ public class BotCommandHandler {
         Content content = new Content(user.getChatId());
         content.setText("Как настроение?");
         content.setMarkup(tgUI.buildButtons());
+        return Optional.of(content);
+    }
+
+    private Optional<Content> toggleReminders(long chatId, Long clientId, boolean enable) {
+        User user = userRepository.findByClientId(clientId);
+        user.setAdvicesEnabled(enable);
+        userRepository.save(user);
+        String status = enable ? "включены" : "отключены";
+        Content content = new Content(chatId);
+        content.setText("Советы дня " + status);
         return Optional.of(content);
     }
 }

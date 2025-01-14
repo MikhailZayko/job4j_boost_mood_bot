@@ -39,7 +39,7 @@ class RemindServiceTest {
         moodLog.setCreatedAt(tenDaysAgo);
         moodLogRepository.save(moodLog);
         TgUI tgUI = new TgUI(moodRepository);
-        new RemindService(sentContent, moodLogRepository, tgUI)
+        new RemindService(sentContent, moodLogRepository, tgUI, null, null)
                 .remindUsers();
         assertThat(result.iterator().next().getMarkup().getKeyboard()
                 .iterator().next().iterator().next().getText()).isEqualTo("Good");
@@ -63,7 +63,7 @@ class RemindServiceTest {
         moodLog.setCreatedAt(today);
         moodLogRepository.save(moodLog);
         TgUI tgUI = new TgUI(moodRepository);
-        new RemindService(sentContent, moodLogRepository, tgUI)
+        new RemindService(sentContent, moodLogRepository, tgUI, null, null)
                 .remindUsers();
         assertThat(result).isEmpty();
     }

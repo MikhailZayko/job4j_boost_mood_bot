@@ -6,6 +6,7 @@ import ru.job4j.bmb.component.TgUI;
 import ru.job4j.bmb.content.Content;
 import ru.job4j.bmb.model.User;
 import ru.job4j.bmb.repository.MoodLogRepository;
+import ru.job4j.bmb.repository.UserRepository;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -19,11 +20,18 @@ public class RemindService {
 
     private final TgUI tgUI;
 
+    private final AdviceService adviceService;
+
+    private final UserRepository userRepository;
+
     public RemindService(SentContent sentContent,
-                           MoodLogRepository moodLogRepository, TgUI tgUI) {
+                         MoodLogRepository moodLogRepository, TgUI tgUI,
+                         AdviceService adviceService, UserRepository userRepository) {
         this.sentContent = sentContent;
         this.moodLogRepository = moodLogRepository;
         this.tgUI = tgUI;
+        this.adviceService = adviceService;
+        this.userRepository = userRepository;
     }
 
     @Scheduled(fixedRateString = "${recommendation.alert.period}")
@@ -43,5 +51,13 @@ public class RemindService {
             content.setMarkup(tgUI.buildButtons());
             sentContent.sent(content);
         }
+    }
+
+    @Scheduled(cron = "${advice.period}")
+    public void remindAdvice() {
+        userRepository.findAll().stream()
+                .filter(User::isAdvicesEnabled)
+                .forEach(user -> sentContent.sent(
+                        adviceService.offerAdvice(user.getChatId(), user.getClientId()).get()));
     }
 }

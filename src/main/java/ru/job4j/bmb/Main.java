@@ -11,9 +11,11 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+import ru.job4j.bmb.model.Advice;
 import ru.job4j.bmb.model.Award;
 import ru.job4j.bmb.model.Mood;
 import ru.job4j.bmb.model.MoodContent;
+import ru.job4j.bmb.repository.AdviceRepository;
 import ru.job4j.bmb.repository.AwardRepository;
 import ru.job4j.bmb.repository.MoodContentRepository;
 import ru.job4j.bmb.repository.MoodRepository;
@@ -47,7 +49,8 @@ public class Main {
     @Bean
     CommandLineRunner loadDatabase(MoodRepository moodRepository,
                                    MoodContentRepository moodContentRepository,
-                                   AwardRepository awardRepository) {
+                                   AwardRepository awardRepository,
+                                   AdviceRepository adviceRepository) {
         return args -> {
             List<Mood> moods = moodRepository.findAll();
             if (!moods.isEmpty()) {
@@ -55,6 +58,7 @@ public class Main {
             }
             loadMood(moodRepository, moodContentRepository);
             loadAward(awardRepository);
+            loadAdvice(adviceRepository);
         };
     }
 
@@ -145,5 +149,22 @@ public class Main {
                 "За значимые достижения (например, 50 дней хорошего настроения). Награда: Персонализированное сообщение от команды приложения или вдохновляющая цитата.",
                 50));
         awardRepository.saveAll(awards);
+    }
+
+    private void loadAdvice(AdviceRepository adviceRepository) {
+        List<Advice> advices = new ArrayList<>();
+        advices.add(new Advice("Продолжай работать в том же духе!", true));
+        advices.add(new Advice("Не унывай и возьми себя в руки!", false));
+        advices.add(new Advice("Отличная работа! Так держать!", true));
+        advices.add(new Advice("Попробуй найти время для отдыха.", false));
+        advices.add(new Advice("Твой позитив вдохновляет других!", true));
+        advices.add(new Advice("Не зацикливайся на неудачах, завтра все получится.", false));
+        advices.add(new Advice("Каждый день ты становишься лучше!", true));
+        advices.add(new Advice("Маленькие шаги ведут к большим победам.", true));
+        advices.add(new Advice("Не бойся просить помощи, когда это нужно.", false));
+        advices.add(new Advice("Не забывай заботиться о себе, это важно.", false));
+        advices.add(new Advice("Ты делаешь большой вклад в свою жизнь, продолжай!", true));
+        advices.add(new Advice("Ошибки — это часть пути. Учись на них.", false));
+        adviceRepository.saveAll(advices);
     }
 }

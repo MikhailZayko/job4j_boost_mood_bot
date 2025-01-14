@@ -16,6 +16,9 @@ public class User {
     @Column(name = "chat_id")
     private long chatId;
 
+    @Column(name = "advices_enabled")
+    private boolean advicesEnabled = true;
+
     public Long getId() {
         return id;
     }
@@ -38,6 +41,14 @@ public class User {
 
     public void setChatId(long chatId) {
         this.chatId = chatId;
+    }
+
+    public boolean isAdvicesEnabled() {
+        return advicesEnabled;
+    }
+
+    public void setAdvicesEnabled(boolean advicesEnabled) {
+        this.advicesEnabled = advicesEnabled;
     }
 
     @Override
